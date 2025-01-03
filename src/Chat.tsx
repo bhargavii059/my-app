@@ -1,47 +1,44 @@
 import React, { useEffect, useState } from 'react';
-import { HttpTransportType, HubConnectionBuilder } from '@microsoft/signalr';
-
+import { HubConnectionBuilder } from '@microsoft/signalr';
+ 
 const Chat = () => {
-    const [connection, setConnection] = useState<any>(null);
-    const [message, setMessage] = useState<string>("");
-    const [messages, setMessages] = useState<string[]>([]);
-    const [isConnected, setIsConnected] = useState<boolean>(false);  // Track connection state
-
-    // Initialize the SignalR connection
+    const [connection, setConnection] = useState<any>(null);//storing signalR connection
+    const [message, setMessage] = useState<string>("");//storing the current message typed by user
+    const [messages, setMessages] = useState<string[]>([]);//storing all the messages array history
+    const [isConnected, setIsConnected] = useState<boolean>(false);  //checking continuisly whether the connectuin is there ort lost.
+ 
+   
     useEffect(() => {
         const newConnection = new HubConnectionBuilder()
-    .withUrl("https://localhost:44325/chatHub",{
-        withCredentials: true,  // Make sure credentials are included
+            .withUrl("http://localhost:5112/chatHub",{
+        withCredentials: true,  
     })
     .build();
-
-
-        // Start the connection
+ 
+ 
         newConnection.start()
             .then(() => {
                 console.log("Connection established!");
-                setIsConnected(true);  // Set to true when the connection is established
+                setIsConnected(true);  
             })
-            .catch(err => {
+            .catch((err: Error) => {
                 console.log("Error while establishing connection: ", err);
-                setIsConnected(false);  // Set to false if there is an error
+                setIsConnected(false);  
             });
-
-        // Listen for incoming messages
+ 
         newConnection.on("ReceiveMessage", (user: string, message: string) => {
             setMessages((prevMessages) => [...prevMessages, `${user}: ${message}`]);
         });
-
-        // Set the connection object in state
+ 
+       
         setConnection(newConnection);
-
-        // Cleanup the connection on component unmount
-        return () => {
+ 
+        return () => {  //cleaning
             newConnection.stop();
+           
         };
     }, []);
-
-    // Send a message to the SignalR Hub
+ 
     const sendMessage = () => {
         if (connection && message && isConnected) {  // Check if connected before sending
             connection.invoke("SendMessage", "User", message)
@@ -51,7 +48,7 @@ const Chat = () => {
             console.log("Not connected or no message to send");
         }
     };
-
+ 
     return (
         <div>
             <h3>Real-time Chat</h3>
@@ -63,12 +60,15 @@ const Chat = () => {
             <input
                 type="text"
                 value={message}
-                onChange={(e) => setMessage(e.target.value)}
+                onChange={(e: { target: { value: React.SetStateAction<string>; }; }) => setMessage(e.target.value)}
                 placeholder="Enter message"
             />
-            <button onClick={sendMessage} disabled={!isConnected}>Send</button> {/* Disable button if not connected */}
+            <button onClick={sendMessage} >Send</button>
         </div>
     );
 };
-
+ 
 export default Chat;
+ 
+
+
